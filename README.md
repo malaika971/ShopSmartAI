@@ -27,17 +27,18 @@ This project is an Intelligent Shopping Assistant designed to enhance your shopp
 
   # 🛠️ Technologies, Tools & Gen AI Capabilities Mapping
 
-  |Tool / Library | Purpose | Gen AI Capability Demonstrated |
-|-----------------|-----------------|-----------------|
-| CrewAI	Manages | Agents and  multi-step processes	| Multi-Agent Collaboration   | 
-|SerperDevTool	| Searches the web for product listings	| Information Retrieval for RAG  |
-|ScrapeWebsiteTool	| Scrapes data from product listing websites	| Data Collection for downstream processing |
-|WebsiteSearchTool + RAG |	Retrieves and summarizes user reviews	| Retrieval-Augmented Generation (RAG)|
-|Google Gemini LLM	|Provides reasoning, analysis, and natural language output	| Structured Output / JSON Mode+ Review Summarization  |
-|LiteLLM |	Runs Gemini LLMs efficiently	| Efficient LLM Inference|
-|Google Embeddings |	Used for document retrieval in RAG setup	| Vector Search for RAG
-|Colab + Python|	Development environment	| Experimentation and Prototyping
-|speech_recognition|	Converts user voice into text	| Voice-to-Text Input (Integrated!)
+ | Tool / Library           | Purpose                                             | Gen AI Capability Demonstrated                  |
+|--------------------------|-----------------------------------------------------|-------------------------------------------------|
+| CrewAI                   | Manages agents and multi-step processes             | Multi-Agent Collaboration                       |
+| SerperDevTool            | Searches the web for product listings               | Information Retrieval for RAG                   |
+| ScrapeWebsiteTool        | Scrapes data from product listing websites          | Data Collection for downstream processing       |
+| WebsiteSearchTool + RAG  | Retrieves and summarizes user reviews               | Retrieval-Augmented Generation (RAG)            |
+| Google Gemini LLM        | Provides reasoning, analysis, and natural language output | Structured Output / JSON Mode + Review Summarization |
+| LiteLLM                  | Runs Gemini LLMs efficiently                        | Efficient LLM Inference                         |
+| Google Embeddings        | Used for document retrieval in RAG setup            | Vector Search for RAG                           |
+| Colab + Python           | Development environment                             | Experimentation and Prototyping                 |
+| speech_recognition       | Converts user voice into text                       | Voice-to-Text Input (Integrated!)               |
+
 
 
 
@@ -65,20 +66,20 @@ This project is an Intelligent Shopping Assistant designed to enhance your shopp
 Follow these steps to set up and run the project locally:
 
 1. Clone the Repository:
-git clone https://github.com/malaika971/ShopSmartAI.git
-cd Intelligent-Shopping-Assistant-with-CrewAi
+- git clone https://github.com/malaika971/ShopSmartAI.git
+- cd Intelligent-Shopping-Assistant-with-CrewAi
 
 
 2. Create a Virtual Environment:
-python -m venv venv
-source venv/bin/activate   # For Linux/Mac
-venv\Scripts\activate      # For Windows
+- python -m venv venv
+- source venv/bin/activate   # For Linux/Mac
+- venv\Scripts\activate      # For Windows
 
 3.Install Required Dependencies:
-pip install -r requirements.txt
+- pip install -r requirements.txt
 
 4. Run the Application:
-   python app.py
+  - python app.py
 
 
 # Usage
