@@ -7,6 +7,11 @@ Original file is located at
     https://colab.research.google.com/drive/12G40j9U0LmJK8_ZzCLkMRWjP5sORAIWn
 """
 
+# Fix for ChromaDB sqlite3 version issue (MUST BE FIRST)
+import sys
+import pysqlite3
+sys.modules['sqlite3'] = pysqlite3
+
 import streamlit as st
 from crewai import Agent, Crew, Process, Task, LLM
 from crewai_tools import SerperDevTool, ScrapeWebsiteTool, WebsiteSearchTool
@@ -25,7 +30,6 @@ GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 SERPER_API_KEY = os.getenv("SERPER_API_KEY")
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
-
 gemini_llm = LLM(
     api_key=GOOGLE_API_KEY,
     model="gemini/gemini-2.0-flash-lite",
@@ -36,21 +40,19 @@ gemini_llm = LLM(
 # Initialize Whisper model for transcription
 groq_client = Groq(api_key=GROQ_API_KEY)
 
-
 # Function to transcribe audio with Groq Whisper API
 def transcribe_audio_with_groq(audio_data):
     try:
         translation = groq_client.audio.translations.create(
-            file=("audio.wav", audio_data),  # Audio file data
-            model="whisper-large-v3",        # Use Whisper model
-            response_format="json",         # Return in JSON format
-            temperature=0.0                 # Control output randomness
+            file=("audio.wav", audio_data),
+            model="whisper-large-v3",
+            response_format="json",
+            temperature=0.0
         )
-        return translation.text  # Return the transcribed text
+        return translation.text
     except Exception as e:
         st.error(f"Error during transcription: {e}")
         return None
-
 
 # Define Agents
 input_collector = Agent(
@@ -61,14 +63,11 @@ input_collector = Agent(
     verbose=True
 )
 
-# Define  web search Tools
-# Tools for specific websites
+# Define web search Tools
 search_tool = SerperDevTool(api_key=SERPER_API_KEY)
-
 scrape_google = ScrapeWebsiteTool(website_url='https://google.com/')
 scrape_amazon = ScrapeWebsiteTool(website_url='https://www.amazon.com/')
 scrape_daraz = ScrapeWebsiteTool(website_url='https://www.daraz.pk/')
-
 
 web_searcher = Agent(
     role="Web Search Specialist",
@@ -79,8 +78,6 @@ web_searcher = Agent(
     allow_delegation=False,
     verbose=True
 )
-
-
 
 analyst = Agent(
     role="Product Comparison Expert",
@@ -118,7 +115,6 @@ review_agent = Agent(
     verbose=True
 )
 
-# Define the final recommendation agent
 recommender = Agent(
     role="Shopping Recommendation Specialist",
     goal="Recommend the best product based on analysis and user preferences",
@@ -127,15 +123,12 @@ recommender = Agent(
     verbose=True
 )
 
-## Define Tasks
 filters = {
     "min_rating": 4.0,
     "brand": "Sony"
 }
 
-# Manually format the filters
 brand = filters["brand"] if filters["brand"] else "Any"
-
 description = (
     f"Process the user input: '{{user_input}}'\n"
     f"Use the following filters if applicable:\n"
@@ -144,13 +137,11 @@ description = (
     "generate a refined query by Gathering and clarifying user requirements for product search from text or voice input.if the query is not clear or specific, ask the user for more details.\n"
 )
 
-# Now, use the formatted description in your Task
 input_task = Task(
     description=description,
     expected_output="A well-formed product search query based on the user's input.",
     agent=input_collector
 )
-
 
 search_task = Task(
     description="""
@@ -176,7 +167,6 @@ analysis_task = Task(
     context=[search_task]
 )
 
-
 review_task = Task(
     description=(
         "Using the top product recommendation and vendor from the analysis task, "
@@ -191,19 +181,15 @@ review_task = Task(
 
 recommendation_task = Task(
     description="Provide the best product recommendation based on features, customer reviews, and user preferences.",
-     expected_output="A concise product recommendation with summarized reasoning, including product features, price, pros/cons, and customer sentiment.",
+    expected_output="A concise product recommendation with summarized reasoning, including product features, price, pros/cons, and customer sentiment.",
     agent=recommender,
-    context=[
-        analysis_task,  # Output from Analysis Agent (Best Product)
-        review_task     # Output from Review Agent (Review Analysis)
-    ]
+    context=[analysis_task, review_task]
 )
 
 product_knowledge = StringKnowledgeSource(
     content="Information about current product trends, including electronics, fashion, beauty, lifestyle, and more."
 )
 
-# Setup the Crew
 shopping_crew = Crew(
     agents=[input_collector, web_searcher, analyst, review_agent, recommender],
     tasks=[input_task, search_task, analysis_task, review_task, recommendation_task],
@@ -218,14 +204,9 @@ shopping_crew = Crew(
     }
 )
 
-
-
 # --- Streamlit App UI ---
 st.set_page_config(page_title="ShopSmart.AI", page_icon="🛒")
 
-
-
-# Title and Logo in same row using columns
 col1, col2 = st.columns([5, 2])
 with col1:
     st.markdown("""
@@ -235,59 +216,32 @@ with col1:
 with col2:
     st.image("tlogo.png", use_container_width=True)
 
-# --- Sidebar ---
 with st.sidebar:
     st.header("🛠️ Controls")
-
-    # Handle reset from URL
     query_params = st.query_params
     if "reset" in query_params and query_params["reset"] == "1":
         st.session_state.clear()
         st.query_params.clear()
         st.rerun()
 
-    # Start new chat via query param
     if st.button("🧹 Start New Chat"):
         st.query_params["reset"] = "1"
         st.rerun()
 
-    # Manual chat reset
     if st.button("🔄 Reset Chat"):
         st.session_state.clear()
         st.rerun()
 
-    # Filters Section
     st.subheader("🔍 Filters (Optional)")
-
     filters = {
         "min_rating": st.slider("Minimum Rating", min_value=1.0, max_value=5.0, value=3.5),
         "brand": st.text_input("Preferred Brand", value="")
     }
-
     st.session_state["filters"] = filters
     st.write("Filters will be applied to the product search.")
 
-# Filters are now stored in session state and ready to be used.
-# --- Main Chat Area ---
 st.markdown("<h5>💬 Just ask — your AI Shopping Crew will find, analyze, and deliver the best deals!</h5>", unsafe_allow_html=True)
 
-# Function to handle input selection and processing
-# Transcription function (uses Groq Whisper API)
-def transcribe_audio_with_groq(audio_data):
-    try:
-        translation = groq_client.audio.translations.create(
-            file=("audio.wav", audio_data),  # Audio file data
-            model="whisper-large-v3",        # Use Whisper model
-            response_format="json",         # Return in JSON format
-            temperature=0.0                 # Control output randomness
-        )
-        return translation.text  # Return the transcribed text
-    except Exception as e:
-        st.error(f"Error during transcription: {e}")
-        return None
-
-
-# --- Session state setup ---
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
@@ -297,25 +251,18 @@ if "input_mode" not in st.session_state:
 if "user_input" not in st.session_state:
     st.session_state.user_input = ""
 
-# --- Display previous messages ---
 for msg in st.session_state.messages:
     with st.chat_message(msg["role"]):
         st.markdown(msg["content"])
 
-# Input Mode Selector
-input_mode = st.radio(
-    "Choose input type:",
-    ("Text", "Voice")
-)
+input_mode = st.radio("Choose input type:", ("Text", "Voice"))
 st.session_state.input_mode = input_mode
 
-# Handle Text Input
 if st.session_state.input_mode == "Text":
     user_input = st.chat_input("Type your query here...")
     if user_input:
         st.session_state.user_input = user_input
 
-# Handle Voice Input
 elif st.session_state.input_mode == "Voice":
     audio_data = st.audio_input("Speak to Record your Query")
     if audio_data:
@@ -324,8 +271,6 @@ elif st.session_state.input_mode == "Voice":
         if transcribed_text:
             st.session_state.user_input = transcribed_text
 
-
-# --- Process after input is received ---
 if st.session_state.user_input:
     user_msg = st.session_state.user_input
     st.session_state.messages.append({"role": "user", "content": user_msg})
@@ -337,23 +282,13 @@ if st.session_state.user_input:
         with st.spinner("Thinking..."):
             start_time = time.time()
             result = shopping_crew.kickoff(inputs={"user_input": user_msg})
-
             end_time = time.time()
             inference_time = end_time - start_time
-
             reply = result.raw
             st.markdown(reply)
             st.info(f"🕒 Inference time: {inference_time:.2f} seconds")
-
-        # Add the assistant's response to the chat history
         st.session_state.messages.append({"role": "assistant", "content": reply})
-
-
-    # Clear input after processingstreamlit
     st.session_state.user_input = ""
-
-
-# Footer
 
 st.markdown("""
     <style>
