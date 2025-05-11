@@ -8,3 +8,4 @@ SpeechRecognition
 Groq
 gtts
 requests  
+pysqlite3
